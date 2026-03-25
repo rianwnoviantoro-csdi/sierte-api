@@ -26,16 +26,25 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           default_bump: patch
           create_annotated_tag: false
-          dry_run: true  # Hanya hitung versi, belum buat tag
+          dry_run: true  # Hanya hitung versi & changelog, belum buat tag
 
-      - name: 📦 Bump package.json Version
+      - name: 📝 Update CHANGELOG.md & package.json
         run: |
           NEW_VERSION=${{ steps.tag_version.outputs.new_version }}
+          CHANGELOG_ENTRY="${{ steps.tag_version.outputs.changelog }}"
+
+          # Prepend new entry to CHANGELOG.md
+          echo -e "## [v${NEW_VERSION}] - $(date +'%Y-%m-%d')\n\n${CHANGELOG_ENTRY}\n\n---\n" | \
+            cat - CHANGELOG.md > /tmp/CHANGELOG.md && mv /tmp/CHANGELOG.md CHANGELOG.md
+
+          # Bump package.json version
+          npm version $NEW_VERSION --no-git-tag-version
+
+          # Commit both files back
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          npm version $NEW_VERSION --no-git-tag-version
-          git add package.json
-          git commit -m "chore(release): bump version to v$NEW_VERSION [skip ci]"
+          git add CHANGELOG.md package.json
+          git commit -m "chore(release): v${NEW_VERSION} [skip ci]"
           git push origin main
 
       - name: 🏷️ Create & Push Tag
@@ -54,3 +63,4 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
