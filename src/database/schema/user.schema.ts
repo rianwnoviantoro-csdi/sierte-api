@@ -9,6 +9,7 @@ export const users = pgTable('users', {
   isLocked: boolean('is_locked').default(false).notNull(),
   lockedAt: timestamp('locked_at'),
   failedLoginAttempts: integer('failed_login_attempts').default(0).notNull(),
+  refreshToken: text('refresh_token'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (t) => [

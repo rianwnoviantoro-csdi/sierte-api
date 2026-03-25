@@ -2,7 +2,7 @@
 
 Aplikasi ini adalah sebuah bot WhatsApp yang dirancang khusus untuk mempermudah manajemen dan pengurus Rukun Tetangga (RT). Bot ini sangat cocok digunakan di dalam grup WhatsApp warga untuk mengotomatisasi pengumuman dan pencatatan keuangan.
 
-Sistem dibangun menggunakan *framework* [NestJS](https://nestjs.com/) dan terintegrasi langsung dengan WhatsApp (melalui *whatsapp-web.js*).
+Sistem dibangun menggunakan *framework* [NestJS](https://nestjs.com/) dengan database **PostgreSQL** via **Drizzle ORM**, dan terintegrasi langsung dengan WhatsApp (melalui *whatsapp-web.js*).
 
 ---
 
@@ -12,6 +12,9 @@ Sistem dibangun menggunakan *framework* [NestJS](https://nestjs.com/) dan terint
 - **Pencatatan Kas RT**: Fitur terintegrasi bagi bendahara untuk mencatat pemasukan (iuran warga) dan pengeluaran kas RT dengan akurat.
 - **Laporan Kas Transparan**: Menyediakan rekapitulasi data keuangan kepada warga RT yang dapat diakses atau di-request sewaktu-waktu di dalam grup.
 - **Auto-Reply Cerdas**: Mampu merespons otomatis setiap kali akun bot disebutkan (*mention*) di dalam grup WhatsApp RT yang sudah divalidasi.
+- **Autentikasi & Otorisasi**: Sistem login berbasis JWT dengan refresh token, perlindungan brute-force, dan role-based access control (RBAC).
+
+---
 
 ## 🚀 Instalasi & Menjalankan Aplikasi
 
@@ -24,12 +27,15 @@ $ yarn install
 # 2. Persiapkan Database (Pastikan DATABASE_URL sudah diset di berkas .env)
 $ yarn db:generate
 $ yarn db:push
-$ yarn db:seed       # Opsional: untuk mengisi data master awal (roles & admin)
+$ yarn db:seed       # Mengisi data master awal (roles & admin default)
+```
 
 > **ℹ️ Akun Default (hasil Seeder):**
 > - **Email:** `admin@example.com`
 > - **Password:** `Password1!`
+> - **Role:** `Super Admin` _(bypass semua role restriction)_
 
+```bash
 # 3. Jalankan aplikasi (development watch-mode)
 $ yarn run start:dev
 
@@ -37,26 +43,80 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
+---
+
+## 🔑 Auth API
+
+| Method | Endpoint | Auth | Deskripsi |
+|---|---|---|---|
+| `POST` | `/auth/login` | ❌ | Login, mendapatkan `accessToken` & `refreshToken` |
+| `POST` | `/auth/refresh` | ❌ | Perbarui `accessToken` menggunakan `refreshToken` |
+| `POST` | `/auth/logout` | ✅ Bearer | Invalidasi session (hapus refresh token) |
+
+**Request body login:**
+```json
+{
+  "email": "admin@example.com",
+  "password": "Password1!"
+}
+```
+
+**Keamanan login:**
+- Gagal login **5x berturut-turut** → akun dikunci otomatis
+- Akun terkunci hanya bisa dibuka oleh administrator
+
+---
+
+## 🏗️ Arsitektur
+
+```
+src/
+├── common/
+│   ├── decorators/       @Roles() decorator
+│   ├── filters/          HttpExceptionFilter (global)
+│   ├── guards/           RolesGuard
+│   ├── interceptors/     ResponseInterceptor (global)
+│   └── pipes/            ZodValidationPipe (global)
+├── config/               Env schema & app config
+├── database/
+│   ├── schema/           Drizzle table definitions (1 file per table)
+│   └── seeds/            Database seeders
+└── modules/
+    ├── auth/             Login, logout, refresh token
+    ├── database/         DatabaseModule & provider
+    └── whatsapp/         WhatsApp bot integration
+```
+
+**Global providers** (terdaftar di `app.module.ts`):
+| Layer | Class | Fungsi |
+|---|---|---|
+| Pipe | `ZodValidationPipe` | Validasi request body |
+| Filter | `HttpExceptionFilter` | Format error response |
+| Interceptor | `ResponseInterceptor` | Format success response |
+
+**Database scripts:**
+```bash
+yarn db:generate   # Generate file migrasi dari perubahan schema
+yarn db:migrate    # Jalankan migrasi
+yarn db:push       # Push schema langsung ke DB (dev only)
+yarn db:seed       # Isi data awal
+yarn db:studio     # Buka Drizzle Studio (visual DB manager)
+```
+
+---
+
 ## 📱 Cara Sinkronisasi Kontak WhatsApp
 
-Aplikasi ini menggunakan sistem _Local Authentication_:
+1. Pertama kali aplikasi dijalankan, sebuah *QR Code* akan langsung muncul di terminal.
+2. Buka WhatsApp → **Perangkat Taut (Linked Devices)** → pindai QR Code.
+3. Tunggu hingga muncul log `✅ WhatsApp Bot is ready and connected!`.
+4. Sesi tersimpan otomatis di `.wwebjs_auth/` — tidak perlu scan ulang setiap restart.
 
-1. Pertama kali aplikasi dijalankan (`yarn run start:dev`), sebuah *QR Code* akan langsung muncul di terminal (console).
-2. Buka aplikasi WhatsApp dari handphone yang nomornya ingin Anda jadikan "Bot RT".
-3. Masuk ke **Perangkat Taut (Linked Devices)**, lalu pindai (scan) *QR Code* di terminal.
-4. Tunggu beberapa saat. Jika sudah muncul log `✅ WhatsApp Bot is ready and connected!`, artinya bot sudah aktif dan dapat menerima/mengirim pesan.
-5. Sesi akan otomatis tersimpan dalam direktori `.wwebjs_auth/` di komputer server sehingga bot tidak perlu memindai ulang setiap kali server dinyalakan ulang.
-
-## 🔐 Konfigurasi Keamanan (Security)
-
-Secara default, bot ini dikonfigurasi agar:
-- **Mengabaikan Pesan Pribadi (Japri / Private Message)**: Sistem ini memprioritaskan privasi. Bot tidak merespon jika ada warga yang nge-chat pribadi.
-- **Merespons Mention Spesifik**: Bot hanya akan "bangun" dan membalas jika ada yang me-_mention_ akunnya langsung di dalam grup.
-- **Validasi Terbatas**: Jika diinginkan, bot bisa di-_restrict_ hanya boleh merespons aktivitas di grup-grup RT tertentu yang ID-nya sudah didaftarkan (`ALLOWED_GROUPS`).
+---
 
 ## 📝 Daftar Perubahan (Changelog)
 
-Untuk melihat daftar riwayat pembaruan versi serta detail fitur-fitur teknis yang sudah terimplementasi, silakan baca berkas [CHANGELOG.md](./CHANGELOG.md).
+Untuk melihat riwayat pembaruan versi, silakan baca berkas [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
