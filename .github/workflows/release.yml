@@ -1,0 +1,38 @@
+name: Auto Versioning & Release
+
+on:
+  push:
+    branches:
+      - main # Trigger otomatis berjalan saat Anda melakukan Git Push ke branch main
+
+jobs:
+  auto-release:
+    name: Determine Version & Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Dibutuhkan untuk GitHub membuat Tag dan Release
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Wajib agar action bisa membaca histori commit untuk menentukan versi
+
+      - name: 🏷️ Bump Version and Push Tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch # Secara default naik 0.0.x (patch) jika tidak ada format spesifik
+          create_annotated_tag: true
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag_version.outputs.new_tag }}
+          name: Versi ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

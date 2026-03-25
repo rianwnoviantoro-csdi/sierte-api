@@ -95,6 +95,19 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
                 return;
             await this.handleIncomingMessage(msg);
         });
+
+        client.on('call', async (call) => {
+            if (this.client !== client || !call.from)
+                return;
+            try {
+                this.logger.log(`Menolak panggilan masuk secara otomatis dari ID: ${call.from}`);
+                await call.reject();
+                await this.sendMessage(call.from, '🤖 *Auto-Reply:*\nMohon maaf, bot ini adalah layanan otomatis dan tidak dapat menerima panggilan suara maupun video. Silakan sampaikan melalui pesan teks (jangan lupa di-mention / tag jika di grup).');
+            } catch (err) {
+                this.logger.error('Gagal menolak panggilan (auto-reject)', err);
+            }
+        });
+
         client.initialize();
     }
 

@@ -2,7 +2,17 @@
 
 Semua perubahan dan daftar fitur terbaru dari dokumentasi proyek ini akan dicatat dalam berkas ini.
 
-## [v0.1.0-alpha] - Pengembangan Tahap Awal
+## [v0.2.0] - Call Intercept & Auto-Reject
+
+### **✨ Fitur Baru**
+
+- **Call Auto-Reject & Reminder**:
+  - `Anti-Spam Call`: Bot dibekali dengan interseptor panggilan suara maupun *video call*. Semua upaya telepon dari warga akan otomatis ditolak (*auto-reject*) oleh bot sedetik setelah nomor tersebut berdering.
+  - `Call Reply Notification`: Setelah panggilan ditolak secara sepihak, bot akan seketika mengirim pesan teks kepada si penelepon, menjelaskan secara ramah bahwa itu adalah nomor otomatis.
+
+---
+
+## [v0.1.0] - Pengembangan Tahap Awal
 
 Versi ini merupakan implementasi pondasi utama untuk sistem Bot Rukun Tetangga yang terhubung dengan layanan WhatsApp secara otomatis menggunakan _whatsapp-web.js_.
 
