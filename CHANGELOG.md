@@ -1,3 +1,16 @@
+## [v0.1.3] - 2026-03-25
+
+### [0.1.3](https://github.com/rianwnoviantoro-csdi/sierte-api/compare/v0.1.2...v0.1.3) (2026-03-25)
+
+
+### Documentation
+
+* Rewrite changelog to include detailed historical entries for v0.0.1, v0.1.0, and v0.1.1, and update generation notes. ([8d1b2a0](https://github.com/rianwnoviantoro-csdi/sierte-api/commit/8d1b2a0af8929c69a3c35e979e06e3e1d54e0b29))
+
+
+
+---
+
 # Changelog Sierte API (Bot WhatsApp RT)
 
 Entri baru di-_generate_ secara otomatis oleh GitHub Actions. Entri lama dipertahankan di bawah.
