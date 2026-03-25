@@ -2,6 +2,31 @@
 
 Semua perubahan dan daftar fitur terbaru dari dokumentasi proyek ini akan dicatat dalam berkas ini.
 
+## [v0.3.0] - Integrasi Database & Drizzle ORM
+
+### **✨ Fitur Baru**
+
+- **Drizzle ORM & PostgreSQL**:
+  - Mengintegrasikan Drizzle ORM secara terpusat melalui `DatabaseModule` global di NestJS.
+  - Skema database termodularisasi: satu file per tabel (`user.schema.ts`, `role.schema.ts`, `user-role.schema.ts`).
+  - UUID sebagai *Primary Key* di seluruh tabel menggantikan serial integer.
+  - Relasi *Many-to-Many* antara `users` dan `roles` melalui tabel `user_roles`.
+  - Kolom autentikasi lengkap di tabel `users`: `password`, `status`, `is_locked`, `locked_at`, `failed_login_attempts`.
+- **Indexing Database yang Komprehensif**:
+  - `users`: index pada `name`, `status`, `is_locked`, `locked_at`, `created_at`.
+  - `roles`: index pada `created_at`.
+  - `user_roles`: index individual pada `user_id` dan `role_id`.
+  - Kolom `email` dan `name` (roles) sudah terindeks secara implisit melalui constraint `UNIQUE`.
+- **Sistem Database Seeding Modular**:
+  - Arsitektur seeder termodular di `src/database/seeds/`: `role.seed.ts`, `user.seed.ts`, `user-role.seed.ts`, dan `index.ts` sebagai runner utama.
+  - Akun admin default tersedia setelah menjalankan `yarn db:seed`.
+
+### **🔧 Perbaikan Internal**
+
+- Menambahkan script database di `package.json`: `db:generate`, `db:migrate`, `db:push`, `db:seed`, `db:studio`.
+
+---
+
 ## [v0.2.0] - Call Intercept & Auto-Reject
 
 ### **✨ Fitur Baru**

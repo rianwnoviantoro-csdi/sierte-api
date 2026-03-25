@@ -15,13 +15,22 @@ Sistem dibangun menggunakan *framework* [NestJS](https://nestjs.com/) dan terint
 
 ## 🚀 Instalasi & Menjalankan Aplikasi
 
-Pastikan Anda memiliki **Node.js** dan _package manager_ pilihan (Yarn/NPM) terpasang di sistem.
+Pastikan Anda memiliki **Node.js**, **PostgreSQL**, dan _package manager_ pilihan (Yarn/NPM) terpasang di sistem.
 
 ```bash
 # 1. Install semua dependensi
 $ yarn install
 
-# 2. Jalankan aplikasi (development watch-mode)
+# 2. Persiapkan Database (Pastikan DATABASE_URL sudah diset di berkas .env)
+$ yarn db:generate
+$ yarn db:push
+$ yarn db:seed       # Opsional: untuk mengisi data master awal (roles & admin)
+
+> **ℹ️ Akun Default (hasil Seeder):**
+> - **Email:** `admin@example.com`
+> - **Password:** `Password1!`
+
+# 3. Jalankan aplikasi (development watch-mode)
 $ yarn run start:dev
 
 # Atau jalankan dalam mode production
