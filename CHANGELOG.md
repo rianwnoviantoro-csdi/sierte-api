@@ -1,3 +1,16 @@
+## [v0.2.0] - 2026-03-25
+
+## [0.2.0](https://github.com/rianwnoviantoro-csdi/sierte-api/compare/v0.1.3...v0.2.0) (2026-03-25)
+
+
+### Features
+
+* Implement JWT authentication with refresh tokens, role-based access control, and global error/response handling with Zod validation. ([c228dff](https://github.com/rianwnoviantoro-csdi/sierte-api/commit/c228dffd571489ea1f46287b85ef4c0513a8bf08))
+
+
+
+---
+
 ## [v0.1.3] - 2026-03-25
 
 ### [0.1.3](https://github.com/rianwnoviantoro-csdi/sierte-api/compare/v0.1.2...v0.1.3) (2026-03-25)
