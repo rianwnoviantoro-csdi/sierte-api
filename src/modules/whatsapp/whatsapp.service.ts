@@ -3,6 +3,7 @@ import { WaStatus } from 'src/common';
 import { Client, LocalAuth, Message } from 'whatsapp-web.js';
 import { DATABASE_CONNECTION } from '../database/database.provider';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { between, asc } from 'drizzle-orm';
 import * as schema from '../../database/schema';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -165,6 +166,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
             const body = msg.body || '';
             // Memeriksa apakah kata "kas" atau "bayar kas" dipanggil sebagai perintah utama (mengabaikan mention diawal)
             const isKasCommand = /^(?:@\d+\s+)?(?:bayar\s+)?kas\b/i.test(body.trim());
+            const isLaporanKasCommand = /^(?:@\d+\s+)?laporan\s+kas\b/i.test(body.trim());
             
             if (isKasCommand) {
                 // Parse pattern: @BotName kas [Nama] [Jumlah] [Bulan/Keterangan]
@@ -191,6 +193,65 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
                     }
                 } else {
                     await msg.reply('ℹ️ Format perintah salah.\nGunakan: *@BotName kas [Nama] [Jumlah] [Keterangan]*\n\nContoh:\n*@BotName kas Budi 50000 Januari*');
+                }
+            } else if (isLaporanKasCommand) {
+                const laporanRegex = /^(?:@\d+\s+)?laporan\s+kas(?:\s+(.*))?/i;
+                const match = body.trim().match(laporanRegex);
+                const periodRaw = match ? match[1] : '';
+                const period = (periodRaw || 'hari ini').toLowerCase().trim();
+
+                let startDate: Date;
+                let endDate: Date;
+                const now = new Date();
+
+                if (period === 'hari ini') {
+                    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+                    endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+                } else if (period === 'minggu ini') {
+                    const day = now.getDay();
+                    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+                    startDate = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0);
+                    endDate = new Date(now.getFullYear(), now.getMonth(), diff + 6, 23, 59, 59);
+                } else if (period === 'bulan ini') {
+                    startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+                    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+                } else {
+                    const parsedDate = new Date(period);
+                    if (!isNaN(parsedDate.getTime())) {
+                        startDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), 0, 0, 0);
+                        endDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), 23, 59, 59);
+                    } else {
+                        await msg.reply('ℹ️ Periode tidak valid.\nGunakan: hari ini, minggu ini, bulan ini, atau format tanggal YYYY-MM-DD.');
+                        return;
+                    }
+                }
+
+                try {
+                    const records = await this.db.query.kasRt.findMany({
+                        where: between(schema.kasRt.createdAt, startDate, endDate),
+                        orderBy: [asc(schema.kasRt.createdAt)],
+                    });
+
+                    if (records.length === 0) {
+                        await msg.reply(`📊 *Laporan Kas RT*\nPeriode: ${period.toUpperCase()}\n\nBelum ada data pemasukan pada periode ini.`);
+                        return;
+                    }
+
+                    let total = 0;
+                    let reportText = `📊 *Laporan Kas RT*\nPeriode: ${period.toUpperCase()}\n\n`;
+                    const rpHelper = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' });
+
+                    records.forEach((record, index) => {
+                        total += record.amount;
+                        const dateStr = record.createdAt.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                        reportText += `${index + 1}. ${dateStr} - ${record.name}: ${rpHelper.format(record.amount)} ${record.notes ? `(${record.notes})` : ''}\n`;
+                    });
+
+                    reportText += `\n*Total Pemasukan:* ${rpHelper.format(total)}`;
+                    await msg.reply(reportText);
+                } catch (error) {
+                    this.logger.error('Failed to generate report', error);
+                    await msg.reply('❌ Maaf, terjadi kesalahan saat mengambil laporan.');
                 }
             } else {
                 await msg.reply('Halo! Ada yang bisa saya bantu?');

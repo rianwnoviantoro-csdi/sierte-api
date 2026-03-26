@@ -101,6 +101,32 @@ Keterangan: Januari
 
 > **Catatan:** Perintah juga mendukung varian `bayar kas`. Misalnya: `@NamaBot bayar kas Siti 100000 Februari`
 
+### 📊 Laporan Kas RT
+
+Untuk melihat rekapitulasi iuran kas pada periode tertentu:
+
+```
+@NamaBot laporan kas [Periode]
+```
+
+| Periode | Penjelasan | Contoh Format |
+|---|---|---|
+| `hari ini` | Laporan transaksi kas hari ini | `@NamaBot laporan kas hari ini` |
+| `minggu ini` | Laporan transaksi kas dari awal minggu (Senin) hingga ujung minggu (Minggu) | `@NamaBot laporan kas minggu ini` |
+| `bulan ini` | Laporan transaksi sepanjang bulan berjalan saat ini | `@NamaBot laporan kas bulan ini` |
+| `YYYY-MM-DD` | Laporan transaksi pada tanggal spesifik | `@NamaBot laporan kas 2026-03-26` |
+
+**Respon berhasil:**
+```
+📊 *Laporan Kas RT*
+Periode: BULAN INI
+
+1. 02/03/26 - Budi: Rp 50.000,00 (Januari)
+2. 10/03/26 - Siti: Rp 100.000,00 (Feb-Mar)
+
+*Total Pemasukan:* Rp 150.000,00
+```
+
 ---
 
 ## 🗄️ Skema Database
