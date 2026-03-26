@@ -1,3 +1,22 @@
+## [v0.3.0] - 2026-03-26
+
+## [0.3.0](https://github.com/rianwnoviantoro-csdi/sierte-api/compare/v0.2.0...v0.3.0) (2026-03-26)
+
+
+### Features
+
+* Implement RT dues recording via WhatsApp messages by adding a new `kas_rt` schema and integrating it into the WhatsApp service. ([15baf8f](https://github.com/rianwnoviantoro-csdi/sierte-api/commit/15baf8fa4313d4aa0927edb60c2d32aa1c7768ea))
+* Implement WhatsApp bot command for recording Kas RT payments, update `kas_rt` schema with a `source` field, and refactor `ZodValidationPipe` for flexible global and per-route validation. ([f218f5d](https://github.com/rianwnoviantoro-csdi/sierte-api/commit/f218f5de1edbf0281ef45e1410c8b90998ecab97))
+
+
+### Bug Fixes
+
+* prevent shell word-splitting when generating changelog entry in release workflow. ([8f493ba](https://github.com/rianwnoviantoro-csdi/sierte-api/commit/8f493ba500fc3d1a00856cba4b584c3027970d78))
+
+
+
+---
+
 ## [v0.2.0] - 2026-03-25
 
 ## [0.2.0](https://github.com/rianwnoviantoro-csdi/sierte-api/compare/v0.1.3...v0.2.0) (2026-03-25)
