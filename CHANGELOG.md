@@ -1,3 +1,16 @@
+## [v0.4.0] - 2026-03-26
+
+## [0.4.0](https://github.com/rianwnoviantoro-csdi/sierte-api/compare/v0.3.0...v0.4.0) (2026-03-26)
+
+
+### Features
+
+* Add cash report command with period filtering and documentation. ([ffe1b4f](https://github.com/rianwnoviantoro-csdi/sierte-api/commit/ffe1b4f85e443a398f36c8521ee41e12436857ca))
+
+
+
+---
+
 ## [v0.3.0] - 2026-03-26
 
 ## [0.3.0](https://github.com/rianwnoviantoro-csdi/sierte-api/compare/v0.2.0...v0.3.0) (2026-03-26)
