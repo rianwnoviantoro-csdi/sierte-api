@@ -5,5 +5,6 @@ export const kasRt = pgTable('kas_rt', {
   name: varchar('name', { length: 255 }).notNull(),
   amount: integer('amount').notNull(),
   notes: text('notes'),
+  source: varchar('source', { length: 10 }).notNull().default('bot'), // 'bot' | 'api'
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

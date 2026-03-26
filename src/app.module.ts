@@ -23,10 +23,10 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
     ],
     controllers: [],
     providers: [
-        // Global Pipe — validates all incoming request bodies via Zod schemas
+        // Global Pipe — validates all incoming request bodies via Zod schemas (skips if no schema set per-route)
         {
             provide: APP_PIPE,
-            useClass: ZodValidationPipe,
+            useFactory: () => new ZodValidationPipe(),
         },
         // Global Filter — formats all HTTP exceptions consistently
         {

@@ -9,7 +9,7 @@ Sistem dibangun menggunakan *framework* [NestJS](https://nestjs.com/) dengan dat
 ## 🌟 Fitur Utama
 
 - **Broadcast Pengumuman**: Memudahkan pengurus RT untuk menyebarkan informasi dan pengumuman penting secara massal dan tersentralisasi ke seluruh warga.
-- **Pencatatan Kas RT**: Fitur terintegrasi bagi bendahara untuk mencatat pemasukan (iuran warga) dan pengeluaran kas RT dengan akurat.
+- **Pencatatan Kas RT**: Fitur terintegrasi bagi bendahara untuk mencatat iuran warga langsung melalui perintah di grup WhatsApp.
 - **Laporan Kas Transparan**: Menyediakan rekapitulasi data keuangan kepada warga RT yang dapat diakses atau di-request sewaktu-waktu di dalam grup.
 - **Auto-Reply Cerdas**: Mampu merespons otomatis setiap kali akun bot disebutkan (*mention*) di dalam grup WhatsApp RT yang sudah divalidasi.
 - **Autentikasi & Otorisasi**: Sistem login berbasis JWT dengan refresh token, perlindungan brute-force, dan role-based access control (RBAC).
@@ -67,6 +67,53 @@ $ yarn run start:prod
 
 ---
 
+## 🤖 Perintah Bot WhatsApp
+
+Bot hanya aktif di dalam **grup yang terdaftar** dan hanya merespons ketika di-**mention** langsung.
+
+### 💰 Catat Iuran Kas RT
+
+Gunakan perintah berikut untuk menyimpan pembayaran iuran kas RT langsung dari grup WhatsApp:
+
+```
+@NamaBot kas [Nama] [Jumlah] [Keterangan]
+```
+
+| Parameter | Keterangan | Contoh |
+|---|---|---|
+| `Nama` | Nama anggota yang membayar | `Budi` |
+| `Jumlah` | Nominal iuran (angka, tanpa titik/koma) | `50000` |
+| `Keterangan` | Bulan atau catatan tambahan (opsional) | `Januari` |
+
+**Contoh pesan:**
+```
+@NamaBot kas Budi 50000 Januari
+```
+
+**Respon berhasil:**
+```
+✅ Iuran Kas RT Berhasil Disimpan
+
+Nama: Budi
+Jumlah: Rp 50.000,00
+Keterangan: Januari
+```
+
+> **Catatan:** Perintah juga mendukung varian `bayar kas`. Misalnya: `@NamaBot bayar kas Siti 100000 Februari`
+
+---
+
+## 🗄️ Skema Database
+
+| Tabel | Deskripsi |
+|---|---|
+| `users` | Data pengguna aplikasi (admin/pengurus RT) |
+| `roles` | Daftar peran (Super Admin, Admin, dll.) |
+| `user_roles` | Relasi many-to-many antara user dan role |
+| `kas_rt` | Rekaman transaksi iuran kas RT (`source`: `bot` = dari WhatsApp, `api` = dari endpoint) |
+
+---
+
 ## 🏗️ Arsitektur
 
 ```
@@ -76,7 +123,7 @@ src/
 │   ├── filters/          HttpExceptionFilter (global)
 │   ├── guards/           RolesGuard
 │   ├── interceptors/     ResponseInterceptor (global)
-│   └── pipes/            ZodValidationPipe (global)
+│   └── pipes/            ZodValidationPipe (global, per-route)
 ├── config/               Env schema & app config
 ├── database/
 │   ├── schema/           Drizzle table definitions (1 file per table)
@@ -84,13 +131,13 @@ src/
 └── modules/
     ├── auth/             Login, logout, refresh token
     ├── database/         DatabaseModule & provider
-    └── whatsapp/         WhatsApp bot integration
+    └── whatsapp/         WhatsApp bot integration & command handler
 ```
 
 **Global providers** (terdaftar di `app.module.ts`):
 | Layer | Class | Fungsi |
 |---|---|---|
-| Pipe | `ZodValidationPipe` | Validasi request body |
+| Pipe | `ZodValidationPipe` | Validasi request body (pass-through jika tidak ada schema) |
 | Filter | `HttpExceptionFilter` | Format error response |
 | Interceptor | `ResponseInterceptor` | Format success response |
 
@@ -121,3 +168,4 @@ Untuk melihat riwayat pembaruan versi, silakan baca berkas [CHANGELOG.md](./CHAN
 ---
 
 Dibuat untuk memudahkan warga RT 🏘️
+

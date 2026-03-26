@@ -180,6 +180,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
                             name: memberName,
                             amount,
                             notes: notes || null,
+                            source: 'bot',
                         });
                         
                         const rpAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);

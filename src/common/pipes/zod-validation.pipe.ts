@@ -3,9 +3,10 @@ import { ZodSchema, ZodError } from 'zod';
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
-  constructor(private readonly schema: ZodSchema) {}
+  constructor(private readonly schema?: ZodSchema) {}
 
   transform(value: unknown) {
+    if (!this.schema) return value; // Pass-through jika tidak ada schema (global registration)
     try {
       return this.schema.parse(value);
     } catch (error) {
