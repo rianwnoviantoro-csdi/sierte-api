@@ -1,6 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { WaStatus } from 'src/common';
 import { Client, LocalAuth, Message } from 'whatsapp-web.js';
+import { DATABASE_CONNECTION } from '../database/database.provider';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import * as schema from '../../database/schema';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as qrcode from 'qrcode';
@@ -13,6 +16,11 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
     private isLoggingOut = false;
     private latestQrDataUrl: string | null = null;
     private connectionStatus: WaStatus = 'disconnected';
+
+    constructor(
+        @Inject(DATABASE_CONNECTION)
+        private readonly db: NodePgDatabase<typeof schema>,
+    ) {}
 
     async onModuleInit() {
         this.initClient();
@@ -154,7 +162,38 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
                 this.logger.warn('Gagal set status read/typing', err);
             }
 
-            await msg.reply('Halo! Ada yang bisa saya bantu?');
+            const body = msg.body || '';
+            // Memeriksa apakah kata "kas" atau "bayar kas" dipanggil sebagai perintah utama (mengabaikan mention diawal)
+            const isKasCommand = /^(?:@\d+\s+)?(?:bayar\s+)?kas\b/i.test(body.trim());
+            
+            if (isKasCommand) {
+                // Parse pattern: @BotName kas [Nama] [Jumlah] [Bulan/Keterangan]
+                const kasRegex = /^(?:@\d+\s+)?(?:bayar\s+)?kas\s+(\w+)\s+(\d+)(?:\s+(.+))?/i;
+                const match = body.trim().match(kasRegex);
+
+                if (match) {
+                    const [, memberName, amountStr, notes] = match;
+                    const amount = parseInt(amountStr, 10);
+
+                    try {
+                        await this.db.insert(schema.kasRt).values({
+                            name: memberName,
+                            amount,
+                            notes: notes || null,
+                        });
+                        
+                        const rpAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
+                        await msg.reply(`✅ *Iuran Kas RT Berhasil Disimpan*\n\nNama: ${memberName}\nJumlah: ${rpAmount}\nKeterangan: ${notes || '-'}`);
+                    } catch (error) {
+                        this.logger.error('Failed to save kas RT', error);
+                        await msg.reply('❌ Maaf, terjadi kesalahan saat menyimpan iuran kas RT.');
+                    }
+                } else {
+                    await msg.reply('ℹ️ Format perintah salah.\nGunakan: *@BotName kas [Nama] [Jumlah] [Keterangan]*\n\nContoh:\n*@BotName kas Budi 50000 Januari*');
+                }
+            } else {
+                await msg.reply('Halo! Ada yang bisa saya bantu?');
+            }
         }
         catch (err) {
             this.logger.error('Error handling incoming message', err);
