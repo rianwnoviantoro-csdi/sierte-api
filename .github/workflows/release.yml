@@ -29,13 +29,21 @@ jobs:
           dry_run: true  # Hanya hitung versi & changelog, belum buat tag
 
       - name: 📝 Update CHANGELOG.md & package.json
+        env:
+          CHANGELOG_ENTRY: ${{ steps.tag_version.outputs.changelog }}
+          NEW_VERSION: ${{ steps.tag_version.outputs.new_version }}
         run: |
-          NEW_VERSION=${{ steps.tag_version.outputs.new_version }}
-          CHANGELOG_ENTRY="${{ steps.tag_version.outputs.changelog }}"
+          # Write new entry to temp file (avoids shell word-splitting from commit messages)
+          {
+            echo "## [v${NEW_VERSION}] - $(date +'%Y-%m-%d')"
+            echo ""
+            printf '%s\n' "${CHANGELOG_ENTRY}"
+            echo ""
+            echo "---"
+            echo ""
+          } > /tmp/new_entry.md
 
-          # Prepend new entry to CHANGELOG.md
-          echo -e "## [v${NEW_VERSION}] - $(date +'%Y-%m-%d')\n\n${CHANGELOG_ENTRY}\n\n---\n" | \
-            cat - CHANGELOG.md > /tmp/CHANGELOG.md && mv /tmp/CHANGELOG.md CHANGELOG.md
+          cat /tmp/new_entry.md CHANGELOG.md > /tmp/CHANGELOG.md && mv /tmp/CHANGELOG.md CHANGELOG.md
 
           # Bump package.json version
           npm version $NEW_VERSION --no-git-tag-version
